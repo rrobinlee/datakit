@@ -22,16 +22,22 @@ Jupyter:
 
 ```
 datakit/
+│
 ├── __init__.py
+│
 ├── models/
-│   └── schema.py           
+│   └── schema.py
+│   
 ├── adapters/
 │   ├── base.py             
 │   ├── yahoo.py      
-│   └── fred.py            
+│   └── fred.py
+│   
 ├── normalizers/
-│   └── normalizers.py                
+│   └── normalizers.py
+│    
 ├── pipeline/
-│   └── pipeline.py     
+│   └── pipeline.py
+│
 └── tests/
     └── test_datakit.py
