@@ -7,7 +7,6 @@ from typing import Any, Dict, List, Optional
 from datakit.adapters.base import AdapterBase, AdapterError, MacroAdapter
 from datakit.models.schema import Frequency, MacroSeries
 logger = logging.getLogger(__name__)
-
 _BASE_URL = "https://api.stlouisfed.org/fred"
 _FREQ_MAP: dict[str, Frequency] = {"Daily": Frequency.DAILY,
                                    "Weekly": Frequency.WEEKLY,

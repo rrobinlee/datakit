@@ -1,15 +1,15 @@
 # AdapterBase: lifecycle
 # PriceAdapter: get_ohlcv, get_dividends, get_splits, get_fundamentals
 # MacroAdapter: get_macro_series
-
+# FilingsAdapter: get_filings
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from datetime import date
 from typing import Any, List, Optional
-from datakit.models.schema import Dividend, Fundamental, MacroSeries, OHLCV, Split
+from datakit.models.schema import Dividend, Fundamental, MacroSeries, OHLCV, SECFiling, Split
 
 class AdapterError(Exception):
-    """Raised when an adapter cannot satisfy a request"""
+    pass
 
 class AdapterBase:
     SOURCE_NAME: str = "unknown"
@@ -20,7 +20,7 @@ class AdapterBase:
         self._configure(**kwargs)
 
     def _configure(self, **kwargs: Any) -> None:
-        """Override for source-specific setup."""
+        pass
 
     def close(self) -> None:
         if hasattr(self._session, "close"):
@@ -42,46 +42,29 @@ class AdapterBase:
 
 class PriceAdapter(ABC):
     @abstractmethod
-    def get_ohlcv(
-        self,
-        ticker: str,
-        start: date,
-        end: date,
-        frequency: str = "daily",
-        adjusted: bool = True,
-    ) -> List[OHLCV]: ...
+    def get_ohlcv(self, ticker: str, start: date, end: date, frequency: str = "daily", adjusted: bool = True) -> List[OHLCV]: 
+        pass
 
     @abstractmethod
-    def get_dividends(
-        self,
-        ticker: str,
-        start: Optional[date] = None,
-        end: Optional[date] = None,
-    ) -> List[Dividend]: ...
+    def get_dividends(self, ticker: str, start: Optional[date] = None, end: Optional[date] = None) -> List[Dividend]: 
+        pass
 
     @abstractmethod
-    def get_splits(
-        self,
-        ticker: str,
-        start: Optional[date] = None,
-        end: Optional[date] = None,
-    ) -> List[Split]: ...
+    def get_splits(self, ticker: str, start: Optional[date] = None, end: Optional[date] = None) -> List[Split]: 
+        pass
 
     @abstractmethod
-    def get_fundamentals(
-        self,
-        ticker: str,
-        frequency: str = "quarterly",
-        start: Optional[date] = None,
-        end: Optional[date] = None,
-    ) -> List[Fundamental]: ...
-
+    def get_fundamentals(self, ticker: str, frequency: str = "quarterly", start: Optional[date] = None, end: Optional[date] = None) -> List[Fundamental]: 
+        pass
 
 class MacroAdapter(ABC):
     @abstractmethod
-    def get_macro_series(
-        self,
-        series_id: str,
-        start: Optional[date] = None,
-        end: Optional[date] = None,
-    ) -> List[MacroSeries]: ...
+    def get_macro_series(self, series_id: str, start: Optional[date] = None, end: Optional[date] = None) -> List[MacroSeries]: 
+        pass
+
+class FilingsAdapter(ABC):
+    @abstractmethod
+    def get_filings(self, ticker: str, filing_type: Optional[str] = None, limit: int = 10) -> List[SECFiling]: 
+        pass
+
+

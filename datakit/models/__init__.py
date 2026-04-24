@@ -1,1 +1,1 @@
-from .schema import (CorporateActionType, Dividend, Frequency, Fundamental, MacroSeries, OHLCV, Split)
+from .schema import (CorporateActionType, Dividend, FilingType, Frequency, Fundamental, MacroSeries, OHLCV, SECFiling, Split)

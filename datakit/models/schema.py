@@ -22,6 +22,16 @@ class CorporateActionType(str, Enum):
     REVERSE_SPLIT = "reverse_split"
     DIVIDEND_CASH = "dividend_cash"
 
+class FilingType(str, Enum):
+    TEN_K = "10-K"
+    TEN_Q = "10-Q"
+    EIGHT_K = "8-K"
+    DEF_14A = "DEF 14A"
+    S_1 = "S-1"
+    FOUR = "4"
+    SC_13G = "SC 13G"
+    SC_13D = "SC 13D"
+
 @dataclass
 class OHLCV:
     ticker: str
@@ -81,11 +91,24 @@ class Fundamental:
 
 @dataclass
 class MacroSeries:
-    series_id: str  #refer to fred for id
+    series_id: str #refer to fred for id
     name: str
     observation_date: date
     value: Optional[Decimal]
     unit: str
     frequency: Frequency
     source: str = "FRED"
+
+@dataclass
+class SECFiling:
+    ticker: str
+    cik: str
+    filing_type: FilingType
+    filed_date: date
+    period_of_report: Optional[date]
+    accession_number: str
+    primary_document_url: str
+    full_submission_url: str
+    description: str = ""
+    source: str = "SEC EDGAR"
 

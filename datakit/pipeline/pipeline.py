@@ -2,31 +2,28 @@ from __future__ import annotations
 import logging
 from datetime import date
 from typing import Any, Dict, List, Optional
-from datakit.adapters.base import AdapterError, MacroAdapter, PriceAdapter
-from datakit.models.schema import Dividend, Fundamental, MacroSeries, OHLCV, Split
+from datakit.adapters.base import AdapterError, MacroAdapter, PriceAdapter, FilingsAdapter
+from datakit.models.schema import Dividend, Fundamental, MacroSeries, OHLCV, SECFiling, Split
 from datakit.normalizers import (compute_ttm, normalize_fundamentals, normalize_macro, normalize_prices)
 logger = logging.getLogger(__name__) # use logger to save log messages (rate limits, retry attempts, etc)
 
 class Pipeline:
-
-    def __init__(
-        self,
-        price_adapter: Optional[PriceAdapter] = None,
-        macro_adapter: Optional[MacroAdapter] = None,
-        cache: Optional[Dict[str, Any]] = None,
-    ):
+    def __init__(self, 
+                 price_adapter: Optional[PriceAdapter] = None,
+                 macro_adapter: Optional[MacroAdapter] = None,
+                 filing_adapter: Optional[FilingsAdapter] = None,
+                 cache: Optional[Dict[str, Any]] = None):
         self._price = price_adapter
         self._macro = macro_adapter
+        self._filing = filing_adapter
         self._cache = cache
 
-    def get_prices(
-        self,
-        ticker: str,
-        start: date,
-        end: date,
-        frequency: str = "daily",
-        adjusted: bool = True,
-    ) -> List[OHLCV]:
+    def get_prices(self,
+                   ticker: str,
+                   start: date,
+                   end: date,
+                   frequency: str = "daily",
+                   adjusted: bool = True) -> List[OHLCV]:
         key = f"prices:{ticker}:{start}:{end}:{frequency}:{adjusted}"
         if self._cache is not None and key in self._cache:
             return self._cache[key]
@@ -41,31 +38,25 @@ class Pipeline:
             self._cache[key] = result
         return result
 
-    def get_dividends(
-        self,
-        ticker: str,
-        start: Optional[date] = None,
-        end: Optional[date] = None,
-    ) -> List[Dividend]:
+    def get_dividends(self,
+                      ticker: str,
+                      start: Optional[date] = None,
+                      end: Optional[date] = None) -> List[Dividend]:
         self._require_price()
         return self._price.get_dividends(ticker, start, end)
 
-    def get_splits(
-        self,
-        ticker: str,
-        start: Optional[date] = None,
-        end: Optional[date] = None,
-    ) -> List[Split]:
+    def get_splits(self,
+                   ticker: str,
+                   start: Optional[date] = None,
+                   end: Optional[date] = None) -> List[Split]:
         self._require_price()
         return self._price.get_splits(ticker, start, end)
 
-    def get_fundamentals(
-        self,
-        ticker: str,
-        frequency: str = "quarterly",
-        start: Optional[date] = None,
-        end: Optional[date] = None,
-    ) -> List[Fundamental]:
+    def get_fundamentals(self,
+                         ticker: str,
+                         frequency: str = "quarterly",
+                         start: Optional[date] = None,
+                         end: Optional[date] = None) -> List[Fundamental]:
         self._require_price()
         raw = self._price.get_fundamentals(ticker, frequency, start, end)
         return normalize_fundamentals(raw)
@@ -74,18 +65,27 @@ class Pipeline:
         rows = self.get_fundamentals(ticker, frequency="quarterly")
         return compute_ttm(rows)
 
-    def get_macro(
-        self,
-        series_id: str,
-        start: Optional[date] = None,
-        end: Optional[date] = None,
-    ) -> List[MacroSeries]:
+    def get_macro(self,
+                  series_id: str,
+                  start: Optional[date] = None,
+                  end: Optional[date] = None) -> List[MacroSeries]:
         self._require_macro()
         raw = self._macro.get_macro_series(series_id, start, end)
         return normalize_macro(raw)
 
+    def get_filings(self,
+                    ticker: str,
+                    filing_type: Optional[str] = None,
+                    limit: int = 10) -> List[SECFiling]:
+        self._require_filing()
+        return self._filing.get_filings(ticker, filing_type, limit)
+
+    def _require_filing(self) -> None:
+        if self._filing is None:
+            raise AdapterError("No filing_adapter configured")
+
     def close(self) -> None:
-        for adapter in (self._price, self._macro):
+        for adapter in (self._price, self._macro, self._filing):
             if adapter is not None:
                 adapter.close()
 
@@ -97,8 +97,9 @@ class Pipeline:
 
     def _require_price(self) -> None:
         if self._price is None:
-            raise AdapterError("No price_adapter configured.")
+            raise AdapterError("No price_adapter configured")
 
     def _require_macro(self) -> None:
         if self._macro is None:
-            raise AdapterError("No macro_adapter configured.")
+            raise AdapterError("No macro_adapter configured")
+
