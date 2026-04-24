@@ -9,11 +9,11 @@ datakit/
 │   └── schema.py
 ├── adapters/
 │   ├── base.py             
-│   ├── yahoo.py      
+│   ├── yahoo.py
+│   ├── sec_edgar.py       
 │   └── fred.py
 ├── normalizers/
 │   └── normalizers.py
-├── pipeline/
-│   └── pipeline.py
-└── tests/
-    └── test_datakit.py
+└── pipeline/
+    └── pipeline.py
+
